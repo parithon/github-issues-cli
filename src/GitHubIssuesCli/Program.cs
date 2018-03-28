@@ -14,7 +14,15 @@ namespace GitHubIssuesCli
     [VersionOptionFromMember(MemberName = nameof(GetVersion))]
     class Program: CommandBase
     {
-        static void Main(string[] args) => CommandLineApplication.Execute<Program>(args);
+        static int Main(string[] args)
+        {
+            var app = new CommandLineApplication<Program>();
+            app.Conventions
+                .UseDefaultConventions()
+                .UseOnValidateMethodFromModel();
+
+            return app.Execute(args);
+        }
 
         public static string GetVersion() => typeof(Program)
             .Assembly
