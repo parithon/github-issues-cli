@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -7,15 +9,27 @@ namespace GitHubIssuesCli
 {
     internal abstract class RequiresTokenCommandBase : CommandBase
     {
-        protected string GitHubAccessToken { get; private set; }
+        [Option(CommandOptionType.SingleValue, Description = "Your GitHub Personal Access token")]
+        public string Token { get; set;  }
 
-        public ValidationResult OnValidate()
+        protected string GitHubToken => string.IsNullOrEmpty(Token)
+            ? Environment.GetEnvironmentVariable(Constants.GitHubTokenEnvironmentVariable)
+            : Token;
+
+        internal ValidationResult OnValidate(ValidationContext context)
         {
-            SettingsStore store = new SettingsStore();
-            if (!store.ContainsKey("GitHubAccessToken"))
-                return new ValidationResult("You must authenticate with GitHub first");
-
+            if (context.ObjectInstance is CommandLineApplication application)
+            {
+                var tokenOption = application.Options.FirstOrDefault(o => o.LongName == "token");
+                if (tokenOption != null && tokenOption.Values.Count == 0)
+                {
+                    if (Environment.GetEnvironmentVariable(Constants.GitHubTokenEnvironmentVariable) == null)
+                        return new ValidationResult("You need to specify a GitHub token");
+                }
+            }
+            
             return ValidationResult.Success;
         }
+
     }
 }
