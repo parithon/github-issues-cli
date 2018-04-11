@@ -14,6 +14,13 @@ namespace GitHubIssuesCli
         {
             var github = new GitHubClient(new ProductHeaderValue("GitHub-Issues-CLI")) {Credentials = new Credentials(GitHubToken)};
 
+            var user = await github.User.Current();
+
+            console.Write("Listing open issues for ");
+            console.Write($"@{user.Login}", ConsoleColor.DarkMagenta);
+            console.WriteLine();
+            console.WriteLine();
+            
             var issues = await github.Issue.GetAllForCurrent();
 
             var groupedIssues = issues.GroupBy(i => i.Repository.FullName)
@@ -26,8 +33,10 @@ namespace GitHubIssuesCli
                 foreach (var issue in repo)
                 {
                     console.WriteIndent(1);
-                    console.Write($"#{issue.Number} ", ConsoleColor.DarkMagenta);
-                    console.WriteLine($"{issue.Title}");
+                    console.Write($"#{issue.Number} ", ConsoleColor.DarkGreen);
+                    console.Write(issue.Title);
+                    console.Write($" @{issue.User.Login}", ConsoleColor.DarkMagenta);
+                    console.WriteLine();
                 }
 
                 console.WriteLine();
@@ -55,7 +64,7 @@ namespace GitHubIssuesCli
         
         public static void WriteHeader(this IConsole console, string value)
         {
-            console.Write($"> {value}", ConsoleColor.DarkYellow);
+            console.Write($"» {value}", ConsoleColor.DarkYellow);
             console.WriteLine();
         }
     }
