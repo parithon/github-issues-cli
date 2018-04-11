@@ -10,7 +10,7 @@ namespace GitHubIssuesCli
     [Command(
         Name = "ghi", 
         FullName = "GitHub Issues Client",
-        Description = "A simple command line utility to manage GitHub Issues")]
+        Description = "A command line utility to manage GitHub Issues")]
     //[Subcommand("auth", typeof(AuthCommand))]
     [Subcommand("list", typeof(ListIssuesCommand))]
     [VersionOptionFromMember(MemberName = nameof(GetVersion))]
