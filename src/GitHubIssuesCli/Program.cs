@@ -4,6 +4,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using McMaster.Extensions.CommandLineUtils.Validation;
+using Microsoft.Extensions.DependencyInjection;
+using Octokit;
 
 namespace GitHubIssuesCli
 {
@@ -16,7 +18,19 @@ namespace GitHubIssuesCli
     [VersionOptionFromMember(MemberName = nameof(GetVersion))]
     class Program: CommandBase
     {
-        public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
+        public static int Main(string[] args)
+        {
+            var services = new ServiceCollection()
+                .AddSingleton<IGitHubClient>(provider => new GitHubClient(new ProductHeaderValue("GitHub-Issues-CLI")))
+                .BuildServiceProvider();
+
+            var app = new CommandLineApplication<Program>();
+            app.Conventions
+                .UseDefaultConventions()
+                .UseConstructorInjection(services);
+         
+            return app.Execute(args);
+        }
 
         public static string GetVersion() => typeof(Program)
             .Assembly

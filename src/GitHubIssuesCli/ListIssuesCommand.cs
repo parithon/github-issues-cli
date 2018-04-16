@@ -12,16 +12,19 @@ namespace GitHubIssuesCli
     [Command(Description = "List GitHub Issues")]
     internal class ListIssuesCommand : RequiresTokenCommandBase
     {
+        public ListIssuesCommand(IGitHubClient gitHubClient) : base(gitHubClient)
+        {
+        }
+
         public async Task<int> OnExecuteAsync(IConsole console, CommandLineApplication context)
         {
             IReadOnlyList<Issue> issues = null;
             string filterOwner = null;
             string filterRepo = null;
+            User filterUser = null;
             
-            var gitHubClient = new GitHubClient(new ProductHeaderValue("GitHub-Issues-CLI")) {Credentials = new Credentials(GitHubToken)};
-
             // Grab the current user
-            var filterUser = await gitHubClient.User.Current();
+            filterUser = await GitHubClient.User.Current();
 
             // Check if we are in a git repo, and if so try and get the info for the remote GH repo.
             // In this instance we will limit issues to this repository.
@@ -30,7 +33,7 @@ namespace GitHubIssuesCli
             if (githubRepo != null)
             {
                 // Check if we're working with a fork. If so, we want to grab issues from the parent
-                var repositoryInfo = await gitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
+                var repositoryInfo = await GitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
                 if (repositoryInfo.Fork)
                 {
                     filterOwner = repositoryInfo.Parent.Owner.Login;
@@ -45,18 +48,18 @@ namespace GitHubIssuesCli
 
             if (filterOwner != null && filterRepo != null)
             {
-                issues = await gitHubClient.Issue.GetAllForRepository(filterOwner, filterRepo, new RepositoryIssueRequest
+                issues = await GitHubClient.Issue.GetAllForRepository(filterOwner, filterRepo, new RepositoryIssueRequest
                 {
                     Assignee = filterUser.Login
                 });
             }
             else if (filterOwner != null)
             {
-                issues = await gitHubClient.Issue.GetAllForOrganization(filterOwner);
+                issues = await GitHubClient.Issue.GetAllForOrganization(filterOwner);
             }
             else
             {
-                issues = await gitHubClient.Issue.GetAllForCurrent();
+                issues = await GitHubClient.Issue.GetAllForCurrent();
             }
 
             console.Write("Listing open issues assigned to ");
