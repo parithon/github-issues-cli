@@ -15,11 +15,13 @@ namespace GitHubIssuesCli
         public async Task<int> OnExecuteAsync(IConsole console, CommandLineApplication context)
         {
             IReadOnlyList<Issue> issues = null;
+            string filterOwner = null;
+            string filterRepo = null;
             
             var gitHubClient = new GitHubClient(new ProductHeaderValue("GitHub-Issues-CLI")) {Credentials = new Credentials(GitHubToken)};
 
-            // Grab the currenbt user
-            var user = await gitHubClient.User.Current();
+            // Grab the current user
+            var filterUser = await gitHubClient.User.Current();
 
             // Check if we are in a git repo, and if so try and get the info for the remote GH repo.
             // In this instance we will limit issues to this repository.
@@ -27,8 +29,30 @@ namespace GitHubIssuesCli
 
             if (githubRepo != null)
             {
-                // BUG: We need to filter by the current user
-                issues = await gitHubClient.Issue.GetAllForRepository(githubRepo.User, githubRepo.Repository);
+                // Check if we're working with a fork. If so, we want to grab issues from the parent
+                var repositoryInfo = await gitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
+                if (repositoryInfo.Fork)
+                {
+                    filterOwner = repositoryInfo.Parent.Owner.Login;
+                    filterRepo = repositoryInfo.Parent.Name;
+                }
+                else
+                {
+                    filterOwner = repositoryInfo.Owner.Login;
+                    filterRepo = repositoryInfo.Name;
+                }
+            }
+
+            if (filterOwner != null && filterRepo != null)
+            {
+                issues = await gitHubClient.Issue.GetAllForRepository(filterOwner, filterRepo, new RepositoryIssueRequest
+                {
+                    Assignee = filterUser.Login
+                });
+            }
+            else if (filterOwner != null)
+            {
+                issues = await gitHubClient.Issue.GetAllForOrganization(filterOwner);
             }
             else
             {
@@ -36,11 +60,11 @@ namespace GitHubIssuesCli
             }
 
             console.Write("Listing open issues assigned to ");
-            console.Write($"@{user.Login}", ConsoleColor.DarkMagenta);
-            if (githubRepo != null)
+            console.Write($"@{filterUser.Login}", ConsoleColor.DarkMagenta);
+            if (filterOwner != null && filterRepo != null)
             {
                 console.Write(" in ");
-                console.Write($"{githubRepo.User}/{githubRepo.Repository}", ConsoleColor.DarkYellow);
+                console.Write($"{filterOwner}/{filterRepo}", ConsoleColor.DarkYellow);
             }            
             console.WriteLine();
             console.WriteLine();
