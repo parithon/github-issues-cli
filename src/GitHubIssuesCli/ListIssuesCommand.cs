@@ -16,8 +16,11 @@ namespace GitHubIssuesCli
         private readonly IReporter _reporter;
         private readonly ListIssueCriteria _criteria = new ListIssueCriteria();
         
-        [Option(CommandOptionType.SingleValue, Description = "The user whose issues ")]
+        [Option(CommandOptionType.SingleValue, Description = "The user whose issues...")]
         public string User { get; set; }
+
+        [Option(CommandOptionType.SingleValue, Description = "The state of the issues")]
+        public ItemStateFilter State { get; set; } = ItemStateFilter.Open;
         
         public ListIssuesCommand(IGitHubClient gitHubClient, IReporter reporter) : base(gitHubClient)
         {
@@ -81,26 +84,31 @@ namespace GitHubIssuesCli
             {
                 issues = await GitHubClient.Issue.GetAllForRepository(_criteria.Owner, _criteria.Repository, new RepositoryIssueRequest
                 {
-                    Assignee = _criteria.User
+                    Assignee = _criteria.User,
+                    State = State
                 });
             }
             else if (_criteria.Owner!= null)
             {
                 issues = await GitHubClient.Issue.GetAllForOrganization(_criteria.Owner, new IssueRequest
                 {
-                    Filter = IssueFilter.Assigned
+                    Filter = IssueFilter.Assigned,
+                    State = State
                 });
             }
             else
             {
                 issues = await GitHubClient.Issue.GetAllForCurrent(new IssueRequest
                 {
-                    Filter = IssueFilter.Assigned
+                    Filter = IssueFilter.Assigned,
+                    State = State
                 });
             }
 
-            console.Write("Listing open issues assigned to ");
-            console.Write($"@{_criteria.User}", ConsoleColor.DarkMagenta);
+            console.Write("Listing ");
+            console.Write($"{State}", ConsoleColor.Blue);
+            console.Write(" issues assigned to ");
+            console.Write($"@{_criteria.User}", ConsoleColor.Blue);
             if (_criteria.Owner != null && _criteria.Repository != null)
             {
                 console.Write(" in ");
