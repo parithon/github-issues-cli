@@ -2,7 +2,7 @@
 {
     public class ListIssueCriteria
     {
-        public string Assigned { get; set; }
+        public string User { get; set; }
 
         public string Owner { get; set; }
 

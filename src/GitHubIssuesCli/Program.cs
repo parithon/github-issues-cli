@@ -22,6 +22,8 @@ namespace GitHubIssuesCli
         {
             var services = new ServiceCollection()
                 .AddSingleton<IGitHubClient>(provider => new GitHubClient(new ProductHeaderValue("GitHub-Issues-CLI")))
+                .AddSingleton<IConsole, PhysicalConsole>()
+                .AddSingleton<IReporter>(provider => new ConsoleReporter(provider.GetService<IConsole>()))
                 .BuildServiceProvider();
 
             var app = new CommandLineApplication<Program>();

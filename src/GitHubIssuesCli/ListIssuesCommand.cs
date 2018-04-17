@@ -13,18 +13,21 @@ namespace GitHubIssuesCli
     [Command(Description = "List GitHub Issues")]
     internal class ListIssuesCommand : RequiresTokenCommandBase
     {
-        public ListIssuesCommand(IGitHubClient gitHubClient) : base(gitHubClient)
+        private readonly IReporter _reporter;
+        private readonly ListIssueCriteria _criteria = new ListIssueCriteria();
+        
+        [Option(CommandOptionType.SingleValue, Description = "The user whose issues ")]
+        public string User { get; set; }
+        
+        public ListIssuesCommand(IGitHubClient gitHubClient, IReporter reporter) : base(gitHubClient)
         {
+            _reporter = reporter;
         }
 
         public async Task<int> OnExecuteAsync(IConsole console, CommandLineApplication context)
         {
-            ListIssueCriteria criteria = new ListIssueCriteria();
             IReadOnlyList<Issue> issues = null;
             
-            // Grab the current user
-            criteria.Assigned = (await GitHubClient.User.Current()).Login;
-
             // Check if we are in a git repo, and if so try and get the info for the remote GH repo.
             // In this instance we will limit issues to this repository.
             var githubRepo = GitHubRepositoryInfo.Discover(System.Environment.CurrentDirectory);
@@ -35,26 +38,55 @@ namespace GitHubIssuesCli
                 var repositoryInfo = await GitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
                 if (repositoryInfo.Fork)
                 {
-                    criteria.Owner = repositoryInfo.Parent.Owner.Login;
-                    criteria.Repository = repositoryInfo.Parent.Name;
+                    _criteria.Owner = repositoryInfo.Parent.Owner.Login;
+                    _criteria.Repository = repositoryInfo.Parent.Name;
                 }
                 else
                 {
-                    criteria.Owner = repositoryInfo.Owner.Login;
-                    criteria.Repository = repositoryInfo.Name;
+                    _criteria.Owner = repositoryInfo.Owner.Login;
+                    _criteria.Repository = repositoryInfo.Name;
                 }
             }
-
-            if (criteria.Owner != null && criteria.Repository != null)
+            
+            // Validate the user
+            var currentUserInfo = await GitHubClient.User.Current();            
+            if (!string.IsNullOrEmpty(User))
             {
-                issues = await GitHubClient.Issue.GetAllForRepository(criteria.Owner, criteria.Repository, new RepositoryIssueRequest
+                try
                 {
-                    Assignee = criteria.Assigned
+                    _criteria.User = (await GitHubClient.User.Get(User)).Login;
+                }
+                catch (NotFoundException e)
+                {
+                    _reporter.Error($"'{User}' is not a valid GitHub user");
+                    return 1;
+                }
+            }
+            else
+            {
+                // If now user was passed, we assume the current user
+                _criteria.User = currentUserInfo.Login;
+            }
+
+            // If the user is not the current user, we need to ensure that a repo is also specified, as we can only
+            // query across repositories for the current user
+            if (string.IsNullOrEmpty(_criteria.Repository) && string.Compare(_criteria.User, currentUserInfo.Login, StringComparison.OrdinalIgnoreCase) != 0)
+            {
+                _reporter.Error("In order to filter issues by user, you need to specify a repository");
+                return 1;
+            }
+            
+            // Get the issues
+            if (_criteria.Owner != null && _criteria.Repository != null)
+            {
+                issues = await GitHubClient.Issue.GetAllForRepository(_criteria.Owner, _criteria.Repository, new RepositoryIssueRequest
+                {
+                    Assignee = _criteria.User
                 });
             }
-            else if (criteria.Owner!= null)
+            else if (_criteria.Owner!= null)
             {
-                issues = await GitHubClient.Issue.GetAllForOrganization(criteria.Owner, new IssueRequest
+                issues = await GitHubClient.Issue.GetAllForOrganization(_criteria.Owner, new IssueRequest
                 {
                     Filter = IssueFilter.Assigned
                 });
@@ -68,11 +100,11 @@ namespace GitHubIssuesCli
             }
 
             console.Write("Listing open issues assigned to ");
-            console.Write($"@{criteria.Assigned}", ConsoleColor.DarkMagenta);
-            if (criteria.Owner != null && criteria.Repository != null)
+            console.Write($"@{_criteria.User}", ConsoleColor.DarkMagenta);
+            if (_criteria.Owner != null && _criteria.Repository != null)
             {
                 console.Write(" in ");
-                console.Write($"{criteria.Owner}/{criteria.Repository}", ConsoleColor.DarkYellow);
+                console.Write($"{_criteria.Owner}/{_criteria.Repository}", ConsoleColor.DarkYellow);
             }            
             console.WriteLine();
             console.WriteLine();
