@@ -164,8 +164,9 @@ namespace GitHubIssuesCli
             console.Write(" ");
             foreach (var issueLabel in issue.Labels)
             {
-                console.BackgroundColor = ConsoleColorHelper.FromHex(issueLabel.Color);
-                console.ForegroundColor = ConsoleColor.White;
+                var labelColors = ConsoleColorHelper.FromHex(issueLabel.Color);
+                console.BackgroundColor = labelColors.BackgroundCololr;
+                console.ForegroundColor = labelColors.ForegroundColor;
                 console.Write($"{issueLabel.Name}");
                 console.ResetColor();
                 
