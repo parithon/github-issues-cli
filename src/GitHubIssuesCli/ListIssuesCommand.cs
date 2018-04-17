@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using Octokit;
@@ -104,7 +101,7 @@ namespace GitHubIssuesCli
                     State = State
                 });
             }
-
+            
             console.Write("Listing ");
             console.Write($"{State}", ConsoleColor.Blue);
             console.Write(" issues assigned to ");
@@ -163,6 +160,18 @@ namespace GitHubIssuesCli
             console.Write($"#{issue.Number} ", ConsoleColor.DarkGreen);
             console.Write(issue.Title);
             console.Write($" @{issue.User.Login}", ConsoleColor.DarkMagenta);
+
+            console.Write(" ");
+            foreach (var issueLabel in issue.Labels)
+            {
+                console.BackgroundColor = ConsoleColorHelper.FromHex(issueLabel.Color);
+                console.ForegroundColor = ConsoleColor.White;
+                console.Write($"{issueLabel.Name}");
+                console.ResetColor();
+                
+                console.Write(" ");    
+            }
+            
             console.WriteLine();
         }
     }
