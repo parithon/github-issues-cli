@@ -58,24 +58,10 @@ namespace GitHubIssuesCli
             // If we do not have a repo passed in, then try and determine repo from the current folder
             if (string.IsNullOrEmpty(_criteria.Owner) && string.IsNullOrEmpty(_criteria.Repository))
             {
-                // Check if we are in a git repo, and if so try and get the info for the remote GH repo.
-                // In this instance we will limit issues to this repository.
-                var githubRepo = GitHubRepositoryInfo.Discover(System.Environment.CurrentDirectory);
-                if (githubRepo != null)
-                {
-                    // Check if we're working with a fork. If so, we want to grab issues from the parent
-                    var repositoryInfo = await GitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
-                    if (repositoryInfo.Fork)
-                    {
-                        _criteria.Owner = repositoryInfo.Parent.Owner.Login;
-                        _criteria.Repository = repositoryInfo.Parent.Name;
-                    }
-                    else
-                    {
-                        _criteria.Owner = repositoryInfo.Owner.Login;
-                        _criteria.Repository = repositoryInfo.Name;
-                    }
-                }
+                var repositoryInfo = await GetGitHubRepositoryFromFolder(Environment.CurrentDirectory);
+                
+                _criteria.Owner = repositoryInfo.Owner.Login;
+                _criteria.Repository = repositoryInfo.Name;
             }
 
             // Validate the user

@@ -39,5 +39,20 @@ namespace GitHubIssuesCli
             return ValidationResult.Success;
         }
 
+        protected async Task<Repository> GetGitHubRepositoryFromFolder(string folder)
+        {
+            var githubRepo = GitHubRepositoryInfo.Discover(System.Environment.CurrentDirectory);
+            if (githubRepo != null)
+            {
+                // Check if we're working with a fork. If so, we want to grab issues from the parent
+                var repositoryInfo = await GitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
+                if (repositoryInfo.Fork)
+                    return repositoryInfo.Parent;
+
+                return repositoryInfo;
+            }
+
+            return null;
+        }
     }
 }
