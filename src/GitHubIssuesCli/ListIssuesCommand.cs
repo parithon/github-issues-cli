@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace GitHubIssuesCli
         [Option(CommandOptionType.SingleValue, Description = "The state of the issues")]
         public ItemStateFilter State { get; set; } = ItemStateFilter.Open;
         
-        public ListIssuesCommand(IGitHubClient gitHubClient, IReporter reporter) : base(gitHubClient)
+        public ListIssuesCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IReporter reporter) : base(gitHubClient, fileSystem)
         {
             _reporter = reporter;
         }
@@ -58,7 +59,7 @@ namespace GitHubIssuesCli
             // If we do not have a repo passed in, then try and determine repo from the current folder
             if (string.IsNullOrEmpty(_criteria.Owner) && string.IsNullOrEmpty(_criteria.Repository))
             {
-                var repositoryInfo = await GetGitHubRepositoryFromFolder(Environment.CurrentDirectory);
+                var repositoryInfo = await GetGitHubRepositoryFromFolder();
                 
                 _criteria.Owner = repositoryInfo.Owner.Login;
                 _criteria.Repository = repositoryInfo.Name;

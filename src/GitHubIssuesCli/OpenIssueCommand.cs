@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.IO.Abstractions;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -21,7 +22,7 @@ namespace GitHubIssuesCli
             ErrorMessage = "The {0} argument should be in the format owner/repo#number or you can simply pass the issue number when inside a directory containing a GitHub repository")]
         public string Issue { get; set; }
 
-        public OpenIssueCommand(IGitHubClient gitHubClient, IReporter reporter) : base(gitHubClient)
+        public OpenIssueCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IReporter reporter) : base(gitHubClient, fileSystem)
         {
             _reporter = reporter;
         }
@@ -49,7 +50,7 @@ namespace GitHubIssuesCli
             }
             else
             {
-                repositoryInfo = await GetGitHubRepositoryFromFolder(System.Environment.CurrentDirectory);
+                repositoryInfo = await GetGitHubRepositoryFromFolder();
             }
 
             // If we are unable to determine the repo, then return an error

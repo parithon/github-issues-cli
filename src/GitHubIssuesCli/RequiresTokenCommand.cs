@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -16,9 +17,12 @@ namespace GitHubIssuesCli
 
         protected IGitHubClient GitHubClient { get; }
 
-        protected RequiresTokenCommandBase(IGitHubClient gitHubClient)
+        protected IFileSystem FileSystem { get; }
+
+        protected RequiresTokenCommandBase(IGitHubClient gitHubClient, IFileSystem fileSystem)
         {
             GitHubClient = gitHubClient;
+            FileSystem = fileSystem;
         }
         
         internal ValidationResult OnValidate(ValidationContext context)
@@ -39,9 +43,9 @@ namespace GitHubIssuesCli
             return ValidationResult.Success;
         }
 
-        protected async Task<Repository> GetGitHubRepositoryFromFolder(string folder)
+        protected async Task<Repository> GetGitHubRepositoryFromFolder()
         {
-            var githubRepo = GitHubRepositoryInfo.Discover(System.Environment.CurrentDirectory);
+            var githubRepo = GitHubRepositoryInfo.Discover(FileSystem.Directory.GetCurrentDirectory());
             if (githubRepo != null)
             {
                 // Check if we're working with a fork. If so, we want to grab issues from the parent

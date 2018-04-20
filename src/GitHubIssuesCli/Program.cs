@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.IO.Abstractions;
 using System.Reflection;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
@@ -24,6 +25,7 @@ namespace GitHubIssuesCli
             var services = new ServiceCollection()
                 .AddSingleton<IGitHubClient>(provider => new GitHubClient(new ProductHeaderValue("GitHub-Issues-CLI")))
                 .AddSingleton<IConsole, PhysicalConsole>()
+                .AddSingleton<IFileSystem, FileSystem>() 
                 .AddSingleton<IReporter>(provider => new ConsoleReporter(provider.GetService<IConsole>()))
                 .BuildServiceProvider();
 
