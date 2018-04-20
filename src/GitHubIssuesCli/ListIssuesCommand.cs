@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using Octokit;
@@ -13,10 +15,14 @@ namespace GitHubIssuesCli
         private readonly IReporter _reporter;
         private readonly ListIssueCriteria _criteria = new ListIssueCriteria();
         
+        [Option(CommandOptionType.SingleValue, Description = "The repository to limit the issues to", LongName = "repo")]
+        [RegularExpression("^(?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)$", ErrorMessage = "The option {0} must be in the format owner/repo")]
+        public string Repository { get; set; }
+        
         [Option(CommandOptionType.SingleValue, Description = "The user who the issues are related to")]
         public string User { get; set; }
 
-        [Option(CommandOptionType.SingleValue, Description = "The relation of the issues to the user")]
+        [Option(CommandOptionType.SingleValue, Description = "The relation of the issues to the user", ShortName = "R", LongName = "rel")]
         public IssueRelation Relation { get; set; } = IssueRelation.Assigned;
         
         [Option(CommandOptionType.SingleValue, Description = "The state of the issues")]
@@ -31,26 +37,47 @@ namespace GitHubIssuesCli
         {
             IReadOnlyList<Issue> issues = null;
             
-            // Check if we are in a git repo, and if so try and get the info for the remote GH repo.
-            // In this instance we will limit issues to this repository.
-            var githubRepo = GitHubRepositoryInfo.Discover(System.Environment.CurrentDirectory);
-
-            if (githubRepo != null)
+            // See if a repo was passed in
+            if (!string.IsNullOrEmpty(Repository))
             {
-                // Check if we're working with a fork. If so, we want to grab issues from the parent
-                var repositoryInfo = await GitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
-                if (repositoryInfo.Fork)
+                try
                 {
-                    _criteria.Owner = repositoryInfo.Parent.Owner.Login;
-                    _criteria.Repository = repositoryInfo.Parent.Name;
-                }
-                else
-                {
+                    var match = Regex.Match(Repository, "^(?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)$");
+                    var repositoryInfo = await  GitHubClient.Repository.Get(match.Groups["owner"].Value, match.Groups["repo"].Value);
+
                     _criteria.Owner = repositoryInfo.Owner.Login;
                     _criteria.Repository = repositoryInfo.Name;
                 }
+                catch (NotFoundException)
+                {
+                    _reporter.Error($"'{Repository}' is not a valid GitHub repository");
+                    return 1;
+                }
             }
             
+            // If we do not have a repo passed in, then try and determine repo from the current folder
+            if (string.IsNullOrEmpty(_criteria.Owner) && string.IsNullOrEmpty(_criteria.Repository))
+            {
+                // Check if we are in a git repo, and if so try and get the info for the remote GH repo.
+                // In this instance we will limit issues to this repository.
+                var githubRepo = GitHubRepositoryInfo.Discover(System.Environment.CurrentDirectory);
+                if (githubRepo != null)
+                {
+                    // Check if we're working with a fork. If so, we want to grab issues from the parent
+                    var repositoryInfo = await GitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
+                    if (repositoryInfo.Fork)
+                    {
+                        _criteria.Owner = repositoryInfo.Parent.Owner.Login;
+                        _criteria.Repository = repositoryInfo.Parent.Name;
+                    }
+                    else
+                    {
+                        _criteria.Owner = repositoryInfo.Owner.Login;
+                        _criteria.Repository = repositoryInfo.Name;
+                    }
+                }
+            }
+
             // Validate the user
             var currentUserInfo = await GitHubClient.User.Current();            
             if (!string.IsNullOrEmpty(User))
@@ -140,7 +167,7 @@ namespace GitHubIssuesCli
             }
             
             // Issues for specific repo we display non-grouped
-            if (githubRepo != null)
+            if (!string.IsNullOrEmpty(_criteria.Repository))
                 DisplayNonGrouped(issues, console);
             else
                 DisplayGrouped(issues, console);
