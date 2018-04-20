@@ -10,7 +10,7 @@ using Octokit;
 
 namespace GitHubIssuesCli
 {
-    internal abstract class RequiresTokenCommandBase : CommandBase
+    internal abstract class GitHubCommandBase : CommandBase
     {
         [Option(CommandOptionType.SingleValue, Description = "Your GitHub Personal Access token")]
         public string Token { get; set;  }
@@ -19,7 +19,7 @@ namespace GitHubIssuesCli
 
         protected IFileSystem FileSystem { get; }
 
-        protected RequiresTokenCommandBase(IGitHubClient gitHubClient, IFileSystem fileSystem)
+        protected GitHubCommandBase(IGitHubClient gitHubClient, IFileSystem fileSystem)
         {
             GitHubClient = gitHubClient;
             FileSystem = fileSystem;

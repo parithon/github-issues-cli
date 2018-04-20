@@ -11,7 +11,7 @@ using Octokit;
 namespace GitHubIssuesCli
 {
     [Command(Description = "List GitHub Issues")]
-    internal class ListIssuesCommand : RequiresTokenCommandBase
+    internal class ListIssuesCommand : GitHubCommandBase
     {
         private readonly IReporter _reporter;
         private readonly ListIssueCriteria _criteria = new ListIssueCriteria();

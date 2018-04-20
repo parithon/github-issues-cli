@@ -12,7 +12,7 @@ using Octokit;
 
 namespace GitHubIssuesCli
 {
-    internal class OpenIssueCommand : RequiresTokenCommandBase
+    internal class OpenIssueCommand : GitHubCommandBase
     {
         private readonly IReporter _reporter;
 
