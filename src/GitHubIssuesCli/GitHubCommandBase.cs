@@ -49,7 +49,7 @@ namespace GitHubIssuesCli
             if (githubRepo != null)
             {
                 // Check if we're working with a fork. If so, we want to grab issues from the parent
-                var repositoryInfo = await GitHubClient.Repository.Get(githubRepo.User, githubRepo.Repository);
+                var repositoryInfo = await GitHubClient.Repository.Get(githubRepo.Owner, githubRepo.Name);
                 if (repositoryInfo.Fork)
                     return repositoryInfo.Parent;
 

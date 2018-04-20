@@ -6,14 +6,14 @@ namespace GitHubIssuesCli
 {
     public class GitHubRepositoryInfo
     {
-        public string User { get; set; }
+        public string Owner { get; set; }
 
-        public string Repository { get; set; }
+        public string Name { get; set; }
         
-        public GitHubRepositoryInfo(string user, string repository)
+        public GitHubRepositoryInfo(string owner, string name)
         {
-            User = user;
-            Repository = repository;
+            Owner = owner;
+            Name = name;
         }
 
         public static GitHubRepositoryInfo Discover(string path)
