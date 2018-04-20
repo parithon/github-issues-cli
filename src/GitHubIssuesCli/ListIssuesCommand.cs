@@ -13,9 +13,12 @@ namespace GitHubIssuesCli
         private readonly IReporter _reporter;
         private readonly ListIssueCriteria _criteria = new ListIssueCriteria();
         
-        [Option(CommandOptionType.SingleValue, Description = "The user whose issues...")]
+        [Option(CommandOptionType.SingleValue, Description = "The user who the issues are related to")]
         public string User { get; set; }
 
+        [Option(CommandOptionType.SingleValue, Description = "The relation of the issues to the user")]
+        public IssueRelation Relation { get; set; } = IssueRelation.Assigned;
+        
         [Option(CommandOptionType.SingleValue, Description = "The state of the issues")]
         public ItemStateFilter State { get; set; } = ItemStateFilter.Open;
         
@@ -81,7 +84,9 @@ namespace GitHubIssuesCli
             {
                 issues = await GitHubClient.Issue.GetAllForRepository(_criteria.Owner, _criteria.Repository, new RepositoryIssueRequest
                 {
-                    Assignee = _criteria.User,
+                    Assignee = Relation == IssueRelation.Assigned ? _criteria.User : null,
+                    Creator = Relation == IssueRelation.Created ? _criteria.User : null,
+                    Mentioned = Relation == IssueRelation.Mentioned ? _criteria.User : null,
                     State = State
                 });
             }
@@ -89,7 +94,7 @@ namespace GitHubIssuesCli
             {
                 issues = await GitHubClient.Issue.GetAllForOrganization(_criteria.Owner, new IssueRequest
                 {
-                    Filter = IssueFilter.Assigned,
+                    Filter = GetIssueFilter(Relation),
                     State = State
                 });
             }
@@ -97,14 +102,26 @@ namespace GitHubIssuesCli
             {
                 issues = await GitHubClient.Issue.GetAllForCurrent(new IssueRequest
                 {
-                    Filter = IssueFilter.Assigned,
+                    Filter = GetIssueFilter(Relation),
                     State = State
                 });
             }
             
             console.Write("Listing ");
             console.Write($"{State}", ConsoleColor.Blue);
-            console.Write(" issues assigned to ");
+            console.Write(" issues ");
+            switch (Relation)
+            {
+                case IssueRelation.Assigned:
+                    console.Write("assigned to ");
+                    break;
+                case IssueRelation.Created:
+                    console.Write("created by ");
+                    break;
+                case IssueRelation.Mentioned:
+                    console.Write("mentioning ");
+                    break;
+            }
             console.Write($"@{_criteria.User}", ConsoleColor.Blue);
             if (_criteria.Owner != null && _criteria.Repository != null)
             {
@@ -174,6 +191,21 @@ namespace GitHubIssuesCli
             }
             
             console.WriteLine();
+        }
+
+        private IssueFilter GetIssueFilter(IssueRelation relation)
+        {
+            switch (relation)
+            {
+                case IssueRelation.Assigned:
+                    return IssueFilter.Assigned;
+                case IssueRelation.Created:
+                    return IssueFilter.Created;
+                case IssueRelation.Mentioned:
+                    return IssueFilter.Mentioned;
+                default:
+                    return IssueFilter.Assigned;
+            }
         }
     }
 }
