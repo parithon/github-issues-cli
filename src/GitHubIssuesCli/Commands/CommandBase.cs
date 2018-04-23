@@ -1,6 +1,6 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 
-namespace GitHubIssuesCli
+namespace GitHubIssuesCli.Commands
 {
     [HelpOption]
     internal abstract class CommandBase

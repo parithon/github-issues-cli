@@ -5,10 +5,11 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GitHubIssuesCli.Services;
 using McMaster.Extensions.CommandLineUtils;
 using Octokit;
 
-namespace GitHubIssuesCli
+namespace GitHubIssuesCli.Commands
 {
     [Command(Description = "List GitHub Issues")]
     internal class ListIssuesCommand : GitHubCommandBase
@@ -74,7 +75,7 @@ namespace GitHubIssuesCli
                 {
                     _criteria.User = (await GitHubClient.User.Get(User)).Login;
                 }
-                catch (NotFoundException e)
+                catch (NotFoundException)
                 {
                     _reporter.Error($"'{User}' is not a valid GitHub user");
                     return 1;

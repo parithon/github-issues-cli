@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO.Abstractions;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
+using GitHubIssuesCli.Services;
 using McMaster.Extensions.CommandLineUtils;
 using Octokit;
 
-namespace GitHubIssuesCli
+namespace GitHubIssuesCli.Commands
 {
     internal abstract class GitHubCommandBase : CommandBase
     {

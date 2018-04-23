@@ -4,13 +4,12 @@ using System.Diagnostics;
 using System.IO.Abstractions;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
+using GitHubIssuesCli.Services;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.FileSystemGlobbing;
 using Octokit;
 
-namespace GitHubIssuesCli
+namespace GitHubIssuesCli.Commands
 {
     internal class ViewIssueCommand : GitHubCommandBase
     {

@@ -1,4 +1,4 @@
-﻿namespace GitHubIssuesCli
+﻿namespace GitHubIssuesCli.Services
 {
     public interface IGitHubRepositoryDiscoveryService
     {

@@ -1,4 +1,4 @@
-﻿namespace GitHubIssuesCli
+﻿namespace GitHubIssuesCli.Commands
 {
     public class ListIssueCriteria
     {

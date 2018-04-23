@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.IO.Abstractions;
 using System.Reflection;
 using System.Threading.Tasks;
+using GitHubIssuesCli.Commands;
+using GitHubIssuesCli.Services;
 using McMaster.Extensions.CommandLineUtils;
 using McMaster.Extensions.CommandLineUtils.Validation;
 using Microsoft.Extensions.DependencyInjection;

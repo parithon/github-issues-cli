@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace GitHubIssuesCli
+namespace GitHubIssuesCli.Commands
 {
     [Command(Description = "Authenticates a user with GitHub")]
     class AuthCommand: CommandBase
