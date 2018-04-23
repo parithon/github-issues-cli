@@ -96,6 +96,41 @@ namespace GitHubIssuesCli.Tests.Commands
             _issuesClient.Verify(client => client.GetAllForRepository(ValidOwner, ValidRepo, It.IsAny<RepositoryIssueRequest>()), Times.Once());
         }
 
+        [Theory]
+        [InlineData(ItemStateFilter.All)]
+        [InlineData(ItemStateFilter.Closed)]
+        [InlineData(ItemStateFilter.Open)]
+        public async Task ForRepo_PassesState(ItemStateFilter state)
+        {
+            ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.State = state;
+            
+            // Act
+            await command.OnExecuteAsync(NullConsole.Singleton);
+
+            // Assert
+            _issuesClient.Verify(client => client.GetAllForRepository(ValidOwner, ValidRepo, It.Is<RepositoryIssueRequest>(request => request.State == state)), Times.Once());
+        }
+
+        [Theory]
+        [InlineData(IssueRelation.Assigned)]
+        [InlineData(IssueRelation.Created)]
+        [InlineData(IssueRelation.Mentioned)]
+        public async Task ForRepo_SetsRelation(IssueRelation relation)
+        {
+            // Arrange
+            ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.Relation = relation;
+            
+            // Act
+            await command.OnExecuteAsync(NullConsole.Singleton);
+
+            // Assert
+            _issuesClient.Verify(client => client.GetAllForRepository(ValidOwner, ValidRepo, 
+                It.Is<RepositoryIssueRequest>(request => SetsCorrectRelation(request, relation, ValidCurrentUser))), Times.Once());
+        }
+
+
         [Fact]
         public async Task InvalidRepo_ReportsError()
         {
@@ -125,5 +160,67 @@ namespace GitHubIssuesCli.Tests.Commands
             _issuesClient.Verify(client => client.GetAllForCurrent(It.IsAny<IssueRequest>()), Times.Once());
         }
 
+        [Theory]
+        [InlineData(ItemStateFilter.All)]
+        [InlineData(ItemStateFilter.Closed)]
+        [InlineData(ItemStateFilter.Open)]
+        public async Task NoRepo_PassesState(ItemStateFilter state)
+        {
+            // Arrange
+            _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
+                .Returns(() => null);
+
+            ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.State = state;
+            
+            // Act
+            await command.OnExecuteAsync(NullConsole.Singleton);
+
+            // Assert
+            _issuesClient.Verify(client => client.GetAllForCurrent(It.Is<IssueRequest>(request => request.State == state)), Times.Once());
+        }
+
+        [Theory]
+        [InlineData(IssueRelation.Assigned, IssueFilter.Assigned)]
+        [InlineData(IssueRelation.Created, IssueFilter.Created)]
+        [InlineData(IssueRelation.Mentioned, IssueFilter.Mentioned)]
+        public async Task NoRepo_PassesRelation(IssueRelation relation, IssueFilter filter)
+        {
+            // Arrange
+            _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
+                .Returns(() => null);
+
+            ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.Relation = relation;
+            
+            // Act
+            await command.OnExecuteAsync(NullConsole.Singleton);
+
+            // Assert
+            _issuesClient.Verify(client => client.GetAllForCurrent(It.Is<IssueRequest>(request => request.Filter == filter)), Times.Once());
+        }
+
+        #region Helper Methods
+
+        private bool SetsCorrectRelation(RepositoryIssueRequest request, IssueRelation relation, string login)
+        {
+            switch (relation)
+            {
+                case IssueRelation.Assigned:
+                    return request.Assignee == login;
+                    break;
+                case IssueRelation.Created:
+                    return request.Creator == login;
+                    break;
+                case IssueRelation.Mentioned:
+                    return request.Mentioned == login;
+                    break;
+            }
+
+            return false;
+        }
+        
+
+        #endregion
     }
 }
