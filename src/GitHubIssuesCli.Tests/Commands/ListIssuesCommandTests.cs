@@ -23,6 +23,8 @@ namespace GitHubIssuesCli.Tests.Commands
         private readonly Mock<IUsersClient> _usersClient;
 
         private const string ValidCurrentUser = "jerriep";
+        private const string ValidUser = "valid-user";
+        private const string InvalidUser = "invalid-user";
         private const string ValidOwner = "jerriep";
         private const string ValidRepo = "github-issues-cli";
         private const string InvalidRepo = "non-existent";
@@ -48,6 +50,10 @@ namespace GitHubIssuesCli.Tests.Commands
             _usersClient = new Mock<IUsersClient>();
             _usersClient.Setup(client => client.Current())
                 .Returns(Task.FromResult(GitHubModelFactory.CreateUser(ValidCurrentUser)));
+            _usersClient.Setup(client => client.Get(ValidUser))
+                .Returns(Task.FromResult(GitHubModelFactory.CreateUser(ValidUser)));
+            _usersClient.Setup(client => client.Get(InvalidUser))
+                .Throws(new NotFoundException("Say what!?", HttpStatusCode.NotFound));
 
             _gitHubClient = new Mock<IGitHubClient>();
             _gitHubClient.Setup(client => client.Issue)
@@ -130,13 +136,13 @@ namespace GitHubIssuesCli.Tests.Commands
                 It.Is<RepositoryIssueRequest>(request => SetsCorrectRelation(request, relation, ValidCurrentUser))), Times.Once());
         }
 
-
         [Fact]
         public async Task InvalidRepo_ReportsError()
         {
             // Arrange
             ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
             command.Repository = $"{ValidOwner}/{InvalidRepo}";            
+
             // Act
             await command.OnExecuteAsync(_console.Object);
 
@@ -200,6 +206,39 @@ namespace GitHubIssuesCli.Tests.Commands
             _issuesClient.Verify(client => client.GetAllForCurrent(It.Is<IssueRequest>(request => request.Filter == filter)), Times.Once());
         }
 
+        [Fact]
+        public async Task InvalidUser_ReportsError()
+        {
+            // Arrange
+            ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.User = InvalidUser;       
+
+            // Act
+            await command.OnExecuteAsync(_console.Object);
+
+            // Assert
+            _reporter.Verify(r => r.Error(It.IsAny<string>()), Times.Once());
+        }
+ 
+        [Theory]
+        [InlineData(IssueRelation.Assigned)]
+        [InlineData(IssueRelation.Created)]
+        [InlineData(IssueRelation.Mentioned)]
+        public async Task ValidUser_SetsRelation(IssueRelation relation)
+        {
+            // Arrange
+            ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.User = ValidUser;
+            command.Relation = relation;
+            
+            // Act
+            await command.OnExecuteAsync(NullConsole.Singleton);
+
+            // Assert
+            _issuesClient.Verify(client => client.GetAllForRepository(ValidOwner, ValidRepo, 
+                It.Is<RepositoryIssueRequest>(request => SetsCorrectRelation(request, relation, ValidUser))), Times.Once());
+        }
+        
         #region Helper Methods
 
         private bool SetsCorrectRelation(RepositoryIssueRequest request, IssueRelation relation, string login)
