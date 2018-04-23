@@ -17,11 +17,14 @@ namespace GitHubIssuesCli
 
         protected IGitHubClient GitHubClient { get; }
 
+        protected IGitHubRepositoryDiscoveryService GitHubRepositoryDiscoveryService { get; }
+
         protected IFileSystem FileSystem { get; }
 
-        protected GitHubCommandBase(IGitHubClient gitHubClient, IFileSystem fileSystem)
+        protected GitHubCommandBase(IGitHubClient gitHubClient, IGitHubRepositoryDiscoveryService gitHubRepositoryDiscoveryService, IFileSystem fileSystem)
         {
             GitHubClient = gitHubClient;
+            GitHubRepositoryDiscoveryService = gitHubRepositoryDiscoveryService;
             FileSystem = fileSystem;
         }
         
@@ -45,7 +48,7 @@ namespace GitHubIssuesCli
 
         protected async Task<Repository> GetGitHubRepositoryFromFolder()
         {
-            var githubRepo = GitHubRepositoryInfo.Discover(FileSystem.Directory.GetCurrentDirectory());
+            var githubRepo = GitHubRepositoryDiscoveryService.Discover(FileSystem.Directory.GetCurrentDirectory());
             if (githubRepo != null)
             {
                 // Check if we're working with a fork. If so, we want to grab issues from the parent

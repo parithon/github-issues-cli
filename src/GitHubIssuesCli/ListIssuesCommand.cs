@@ -29,7 +29,8 @@ namespace GitHubIssuesCli
         [Option(CommandOptionType.SingleValue, Description = "The state of the issues")]
         public ItemStateFilter State { get; set; } = ItemStateFilter.Open;
         
-        public ListIssuesCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IReporter reporter) : base(gitHubClient, fileSystem)
+        public ListIssuesCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IGitHubRepositoryDiscoveryService gitHubRepositoryDiscoveryService, IReporter reporter) 
+            : base(gitHubClient, gitHubRepositoryDiscoveryService, fileSystem)
         {
             _reporter = reporter;
         }

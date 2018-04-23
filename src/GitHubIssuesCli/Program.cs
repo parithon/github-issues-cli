@@ -26,6 +26,7 @@ namespace GitHubIssuesCli
                 .AddSingleton<IGitHubClient>(provider => new GitHubClient(new ProductHeaderValue("GitHub-Issues-CLI")))
                 .AddSingleton<IConsole, PhysicalConsole>()
                 .AddSingleton<IFileSystem, FileSystem>() 
+                .AddSingleton<IGitHubRepositoryDiscoveryService, GitHubRepositoryDiscoveryService>()
                 .AddSingleton<IReporter>(provider => new ConsoleReporter(provider.GetService<IConsole>()))
                 .BuildServiceProvider();
 

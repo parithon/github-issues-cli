@@ -22,7 +22,8 @@ namespace GitHubIssuesCli
             ErrorMessage = "The {0} argument should be in the format owner/repo#number or you can simply pass the issue number when inside a directory containing a GitHub repository")]
         public string Issue { get; set; }
 
-        public ViewIssueCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IReporter reporter) : base(gitHubClient, fileSystem)
+        public ViewIssueCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IGitHubRepositoryDiscoveryService gitHubRepositoryDiscoveryService, IReporter reporter) 
+            : base(gitHubClient, gitHubRepositoryDiscoveryService, fileSystem)
         {
             _reporter = reporter;
         }
