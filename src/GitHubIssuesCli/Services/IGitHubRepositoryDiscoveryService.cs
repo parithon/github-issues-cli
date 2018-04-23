@@ -3,5 +3,7 @@
     public interface IGitHubRepositoryDiscoveryService
     {
         GitHubRepositoryInfo Discover(string path);
+
+        GitHubRepositoryInfo DiscoverInCurrentDirectory();
     }
 }

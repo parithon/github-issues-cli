@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -6,6 +7,13 @@ namespace GitHubIssuesCli.Services
 {
     public class GitHubRepositoryDiscoveryService : IGitHubRepositoryDiscoveryService
     {
+        private readonly IFileSystem _fileSystem;
+
+        public GitHubRepositoryDiscoveryService(IFileSystem fileSystem)
+        {
+            _fileSystem = fileSystem;
+        }
+
         public GitHubRepositoryInfo Discover(string path)
         {
             // Get the path for the git repo from the path 
@@ -53,6 +61,11 @@ namespace GitHubIssuesCli.Services
             }   
             
             return null;
+        }
+
+        public GitHubRepositoryInfo DiscoverInCurrentDirectory()
+        {
+            return Discover(_fileSystem.Directory.GetCurrentDirectory());
         }
     }
 }

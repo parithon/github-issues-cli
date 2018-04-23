@@ -3,7 +3,7 @@
 namespace GitHubIssuesCli.Commands
 {
     [HelpOption]
-    internal abstract class CommandBase
+    public abstract class CommandBase
     {
     }
 }
