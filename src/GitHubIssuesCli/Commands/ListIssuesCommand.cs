@@ -12,7 +12,7 @@ using Octokit;
 namespace GitHubIssuesCli.Commands
 {
     [Command(Description = "List GitHub Issues")]
-    internal class ListIssuesCommand : GitHubCommandBase
+    public class ListIssuesCommand : GitHubCommandBase
     {
         private readonly IReporter _reporter;
         private readonly ListIssueCriteria _criteria = new ListIssueCriteria();
@@ -36,7 +36,7 @@ namespace GitHubIssuesCli.Commands
             _reporter = reporter;
         }
 
-        public async Task<int> OnExecuteAsync(IConsole console, CommandLineApplication context)
+        public async Task<int> OnExecuteAsync(IConsole console)
         {
             IReadOnlyList<Issue> issues = null;
             
@@ -62,9 +62,12 @@ namespace GitHubIssuesCli.Commands
             if (string.IsNullOrEmpty(_criteria.Owner) && string.IsNullOrEmpty(_criteria.Repository))
             {
                 var repositoryInfo = await GetGitHubRepositoryFromFolder();
-                
-                _criteria.Owner = repositoryInfo.Owner.Login;
-                _criteria.Repository = repositoryInfo.Name;
+
+                if (repositoryInfo != null)
+                {
+                    _criteria.Owner = repositoryInfo.Owner.Login;
+                    _criteria.Repository = repositoryInfo.Name;
+                }
             }
 
             // Validate the user

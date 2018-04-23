@@ -76,7 +76,7 @@ namespace GitHubIssuesCli.Tests
                 );
         }
 
-        private static User CreateUser(string login)
+        public static User CreateUser(string login)
         {
             return new User(
                 "https://github.com/images/error/octocat_happy.gif",

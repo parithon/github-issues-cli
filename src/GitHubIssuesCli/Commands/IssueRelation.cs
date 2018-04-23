@@ -1,6 +1,6 @@
 ﻿namespace GitHubIssuesCli.Commands
 {
-    internal enum IssueRelation
+    public enum IssueRelation
     {
         Assigned,
         Created,
