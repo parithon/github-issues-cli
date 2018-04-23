@@ -12,7 +12,7 @@ using Octokit;
 
 namespace GitHubIssuesCli
 {
-    internal class OpenIssueCommand : GitHubCommandBase
+    internal class ViewIssueCommand : GitHubCommandBase
     {
         private readonly IReporter _reporter;
 
@@ -22,7 +22,7 @@ namespace GitHubIssuesCli
             ErrorMessage = "The {0} argument should be in the format owner/repo#number or you can simply pass the issue number when inside a directory containing a GitHub repository")]
         public string Issue { get; set; }
 
-        public OpenIssueCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IReporter reporter) : base(gitHubClient, fileSystem)
+        public ViewIssueCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IReporter reporter) : base(gitHubClient, fileSystem)
         {
             _reporter = reporter;
         }

@@ -16,7 +16,7 @@ namespace GitHubIssuesCli
         Description = "A command line utility to manage GitHub Issues")]
     //[Subcommand("auth", typeof(AuthCommand))]
     [Subcommand("list", typeof(ListIssuesCommand))]
-    [Subcommand("open", typeof(OpenIssueCommand))]
+    [Subcommand("view", typeof(ViewIssueCommand))]
     [VersionOptionFromMember(MemberName = nameof(GetVersion))]
     class Program: CommandBase
     {
