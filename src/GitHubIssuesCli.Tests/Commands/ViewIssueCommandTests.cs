@@ -1,4 +1,5 @@
 ﻿using System.IO.Abstractions;
+using System.Net;
 using System.Threading.Tasks;
 using GitHubIssuesCli.Commands;
 using GitHubIssuesCli.Services;
@@ -7,6 +8,7 @@ using McMaster.Extensions.CommandLineUtils;
 using Moq;
 using Octokit;
 using Xunit;
+using NotFoundException = Octokit.NotFoundException;
 
 namespace GitHubIssuesCli.Tests.Commands
 {
@@ -18,14 +20,33 @@ namespace GitHubIssuesCli.Tests.Commands
         private readonly Mock<IReporter> _reporter;
         private readonly Mock<IConsole> _console;
 
-        private const string Owner = "jerriep";
-        private const string Repo = "github-issues-cli";
-        private const int IssueNumber = 100;
+        private const string ValidOwner = "jerriep";
+        private const string ValidRepo = "github-issues-cli";
+        private const string InvalidRepo = "non-existent";
+        private const int ValidIssueNumber = 100;
         
         public ViewIssueCommandTests()
         {
+            var repositoriesClient = new Mock<IRepositoriesClient>();
+            repositoriesClient.Setup(client => client.Get(ValidOwner, ValidRepo))
+                .Returns(Task.FromResult(GitHubModelFactory.CreateRepository(ValidOwner, ValidRepo)));
+            repositoriesClient.Setup(client => client.Get(ValidOwner, InvalidRepo))
+                .Throws(new NotFoundException("Say what!?", HttpStatusCode.NotFound));
+
+            var issuesClient = new Mock<IIssuesClient>();
+            issuesClient.Setup(client => client.Get(ValidOwner, ValidRepo, ValidIssueNumber))
+                .Returns(Task.FromResult(GitHubModelFactory.CreateIssue(ValidOwner, ValidRepo, ValidIssueNumber)));
+
             _gitHubClient = new Mock<IGitHubClient>();
+            _gitHubClient.Setup(client => client.Issue)
+                .Returns(issuesClient.Object);
+            _gitHubClient.Setup(client => client.Repository)
+                .Returns(repositoriesClient.Object);
+            
             _discoveryService = new Mock<IGitHubRepositoryDiscoveryService>();
+            _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
+                .Returns(() => new GitHubRepositoryInfo(ValidOwner, ValidRepo));
+
             _browserService = new Mock<IBrowserService>();
             _reporter = new Mock<IReporter>();
             _console = new Mock<IConsole>();
@@ -34,64 +55,59 @@ namespace GitHubIssuesCli.Tests.Commands
         [Fact]
         public async Task NotInARepoFolder_ReportsError()
         {
+            // Arrange
             _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
                 .Returns(() => null);
 
             ViewIssueCommand command = new ViewIssueCommand(_gitHubClient.Object, _discoveryService.Object, _browserService.Object, _reporter.Object);
-            command.Issue = $"{IssueNumber}";
+            command.Issue = $"{ValidIssueNumber}";
+            
+            // Act
             await command.OnExecuteAsync(_console.Object);
 
+            // Assert
             _reporter.Verify(r => r.Error(It.IsAny<string>()), Times.Once());
         }
 
         [Fact]
         public async Task NotInARepoFolder_OpensBrowser_WhenFullIssueSpecified()
         {
-            var issuesClient = new Mock<IIssuesClient>();
-            var repositoriesClient = new Mock<IRepositoriesClient>();
-
-            repositoriesClient.Setup(client => client.Get(Owner, Repo))
-                .Returns(Task.FromResult(GitHubModelFactory.CreateRepository(Owner, Repo)));
-            issuesClient.Setup(client => client.Get(Owner, Repo, IssueNumber))
-                .Returns(Task.FromResult(GitHubModelFactory.CreateIssue(Owner, Repo, IssueNumber)));
-
-            _gitHubClient.Setup(client => client.Issue)
-                .Returns(issuesClient.Object);
-            _gitHubClient.Setup(client => client.Repository)
-                .Returns(repositoriesClient.Object);
-            _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
-                .Returns(() => new GitHubRepositoryInfo(Owner, Repo));
-
+            // Arrange
             ViewIssueCommand command = new ViewIssueCommand(_gitHubClient.Object, _discoveryService.Object, _browserService.Object, _reporter.Object);
-            command.Issue = $"{Owner}/{Repo}#{IssueNumber}";
+            command.Issue = $"{ValidOwner}/{ValidRepo}#{ValidIssueNumber}";
+            
+            // Act
             await command.OnExecuteAsync(_console.Object);
 
-            _browserService.Verify(service => service.OpenBrowser($"https://github.com/{Owner}/{Repo}/issues/{IssueNumber}"), Times.Once);
+            // Assert
+            _browserService.Verify(service => service.OpenBrowser($"https://github.com/{ValidOwner}/{ValidRepo}/issues/{ValidIssueNumber}"), Times.Once);
         }
 
         [Fact]
+        public async Task InvalidRepo_ReportsError()
+        {
+            // Arrange
+            ViewIssueCommand command = new ViewIssueCommand(_gitHubClient.Object, _discoveryService.Object, _browserService.Object, _reporter.Object);
+            command.Issue = $"{ValidOwner}/{InvalidRepo}#{ValidIssueNumber}";
+            
+            // Act
+            await command.OnExecuteAsync(_console.Object);
+
+            // Assert
+            _reporter.Verify(r => r.Error(It.IsAny<string>()), Times.Once());
+        }
+        [Fact]
         public async Task ViewValidIssue_OpensBrowser()
         {
-            var issuesClient = new Mock<IIssuesClient>();
-            var repositoriesClient = new Mock<IRepositoriesClient>();
-
-            repositoriesClient.Setup(client => client.Get(Owner, Repo))
-                .Returns(Task.FromResult(GitHubModelFactory.CreateRepository(Owner, Repo)));
-            issuesClient.Setup(client => client.Get(Owner, Repo, IssueNumber))
-                .Returns(Task.FromResult(GitHubModelFactory.CreateIssue(Owner, Repo, IssueNumber)));
-
-            _gitHubClient.Setup(client => client.Issue)
-                .Returns(issuesClient.Object);
-            _gitHubClient.Setup(client => client.Repository)
-                .Returns(repositoriesClient.Object);
-            _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
-                .Returns(() => new GitHubRepositoryInfo(Owner, Repo));
-            
+            // Arrange
             ViewIssueCommand command = new ViewIssueCommand(_gitHubClient.Object, _discoveryService.Object, _browserService.Object, _reporter.Object);
-            command.Issue = $"{IssueNumber}";
+            command.Issue = $"{ValidIssueNumber}";
+            
+            // Act
             await command.OnExecuteAsync(_console.Object);
             
-            _browserService.Verify(service => service.OpenBrowser($"https://github.com/{Owner}/{Repo}/issues/{IssueNumber}"), Times.Once);
+            // Assert
+            _browserService.Verify(service => service.OpenBrowser($"https://github.com/{ValidOwner}/{ValidRepo}/issues/{ValidIssueNumber}"), Times.Once);
         }
 
     }
