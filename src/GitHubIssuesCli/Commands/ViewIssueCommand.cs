@@ -16,12 +16,15 @@ namespace GitHubIssuesCli.Commands
         private readonly IBrowserService _browserService;
         private readonly IReporter _reporter;
 
+        [Option(CommandOptionType.NoValue, Description = "Opens the issue for viewing in the web browser")]
+        public bool Browser { get; set; }
+        
         [Argument(0, Description = "The reference to the issue to open")]
         [Required]
         [RegularExpression("^((?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)\\#)?(?<issue>\\d+)$", 
             ErrorMessage = "The {0} argument should be in the format owner/repo#number or you can simply pass the issue number when inside a directory containing a GitHub repository")]
         public string Issue { get; set; }
-
+        
         public ViewIssueCommand(IGitHubClient gitHubClient, IGitHubRepositoryDiscoveryService gitHubRepositoryDiscoveryService, 
             IBrowserService browserService, IReporter reporter) 
             : base(gitHubClient, gitHubRepositoryDiscoveryService)
@@ -72,7 +75,8 @@ namespace GitHubIssuesCli.Commands
                 var issue = await GitHubClient.Issue.Get(repositoryInfo.Owner.Login, repositoryInfo.Name, issueNumber);
                 
                 // Open the issue in the browser
-                _browserService.OpenBrowser(issue.HtmlUrl);
+                if (Browser)
+                    _browserService.OpenBrowser(issue.HtmlUrl);
                 
             }
             catch (NotFoundException)
