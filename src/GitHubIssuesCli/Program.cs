@@ -29,6 +29,7 @@ namespace GitHubIssuesCli
                 .AddSingleton<IConsole, PhysicalConsole>()
                 .AddSingleton<IFileSystem, FileSystem>() 
                 .AddSingleton<IGitHubRepositoryDiscoveryService, GitHubRepositoryDiscoveryService>()
+                .AddSingleton<IBrowserService, BrowserService>()
                 .AddSingleton<IReporter>(provider => new ConsoleReporter(provider.GetService<IConsole>()))
                 .BuildServiceProvider();
 

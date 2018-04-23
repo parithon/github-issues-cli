@@ -13,6 +13,7 @@ namespace GitHubIssuesCli.Commands
 {
     internal class ViewIssueCommand : GitHubCommandBase
     {
+        private readonly IBrowserService _browserService;
         private readonly IReporter _reporter;
 
         [Argument(0, Description = "The reference to the issue to open")]
@@ -21,9 +22,10 @@ namespace GitHubIssuesCli.Commands
             ErrorMessage = "The {0} argument should be in the format owner/repo#number or you can simply pass the issue number when inside a directory containing a GitHub repository")]
         public string Issue { get; set; }
 
-        public ViewIssueCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IGitHubRepositoryDiscoveryService gitHubRepositoryDiscoveryService, IReporter reporter) 
+        public ViewIssueCommand(IGitHubClient gitHubClient, IFileSystem fileSystem, IGitHubRepositoryDiscoveryService gitHubRepositoryDiscoveryService, IBrowserService browserService, IReporter reporter) 
             : base(gitHubClient, gitHubRepositoryDiscoveryService, fileSystem)
         {
+            _browserService = browserService;
             _reporter = reporter;
         }
 
@@ -69,7 +71,7 @@ namespace GitHubIssuesCli.Commands
                 var issue = await GitHubClient.Issue.Get(repositoryInfo.Owner.Login, repositoryInfo.Name, issueNumber);
                 
                 // Open the issue in the browser
-                OpenBrowser(issue.HtmlUrl);
+                _browserService.OpenBrowser(issue.HtmlUrl);
                 
             }
             catch (NotFoundException)
@@ -79,38 +81,6 @@ namespace GitHubIssuesCli.Commands
             }
 
             return 0;
-        }
-        
-        /// <remarks>
-        /// Shamelessly stolen from https://github.com/IdentityModel/IdentityModel.OidcClient.Samples/blob/79a7afe6e45027b2ee14206a653436e5853f6b81/NetCoreConsoleClient/src/NetCoreConsoleClient/SystemBrowser.cs#L71-L97
-        /// </remarks>
-        private static void OpenBrowser(string url)
-        {
-            try
-            {
-                Process.Start(url);
-            }
-            catch
-            {
-                // hack because of this: https://github.com/dotnet/corefx/issues/10361
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    url = url.Replace("&", "^&");
-                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    Process.Start("xdg-open", url);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    Process.Start("open", url);
-                }
-                else
-                {
-                    throw;
-                }
-            }
         }
     }
 }
