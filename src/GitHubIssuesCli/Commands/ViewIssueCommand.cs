@@ -11,6 +11,7 @@ using Octokit;
 
 namespace GitHubIssuesCli.Commands
 {
+    [Command(Description = "View details of specific GitHub Issue", ThrowOnUnexpectedArgument = false)]
     public class ViewIssueCommand : GitHubCommandBase
     {
         private readonly IBrowserService _browserService;

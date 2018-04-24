@@ -11,7 +11,7 @@ using Octokit;
 
 namespace GitHubIssuesCli.Commands
 {
-    [Command(Description = "List GitHub Issues")]
+    [Command(Description = "List GitHub Issues", ThrowOnUnexpectedArgument = false)]
     public class ListIssuesCommand : GitHubCommandBase
     {
         private readonly IReporter _reporter;

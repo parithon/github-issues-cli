@@ -34,6 +34,7 @@ namespace GitHubIssuesCli
                 .BuildServiceProvider();
 
             var app = new CommandLineApplication<Program>();
+            app.ThrowOnUnexpectedArgument = false;
             app.Conventions
                 .UseDefaultConventions()
                 .UseConstructorInjection(services);
