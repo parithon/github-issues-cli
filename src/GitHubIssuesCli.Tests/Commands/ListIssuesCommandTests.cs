@@ -137,6 +137,21 @@ namespace GitHubIssuesCli.Tests.Commands
         }
 
         [Fact]
+        public async Task ForRepo_WhenSpecifyingAll_ListForAllUsers()
+        {
+            // Arrange
+            ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.All = true;
+            
+            // Act
+            await command.OnExecuteAsync(NullConsole.Singleton);
+
+            // Assert
+            _issuesClient.Verify(client => client.GetAllForRepository(ValidOwner, ValidRepo, 
+                It.Is<RepositoryIssueRequest>(request => request.Assignee == null && request.Creator == null && request.Mentioned == null)), Times.Once());
+        }
+
+        [Fact]
         public async Task InvalidRepo_ReportsError()
         {
             // Arrange
@@ -205,6 +220,25 @@ namespace GitHubIssuesCli.Tests.Commands
             // Assert
             _issuesClient.Verify(client => client.GetAllForCurrent(It.Is<IssueRequest>(request => request.Filter == filter)), Times.Once());
         }
+        
+        [Fact]
+        public async Task NoRepo_WhenSpecifyingAll_ReportsWarning()
+        {
+            // Arrange
+            _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
+                .Returns(() => null);
+
+            ListIssuesCommand command = new ListIssuesCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.All = true;
+            
+            // Act
+            await command.OnExecuteAsync(NullConsole.Singleton);
+
+            // Assert
+            Assert.False(command.All); // -all flag should be reset to false
+            _reporter.Verify(reporter => reporter.Warn(It.IsAny<string>()), Times.Once());
+        }
+
 
         [Fact]
         public async Task InvalidUser_ReportsError()

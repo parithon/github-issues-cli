@@ -16,7 +16,10 @@ namespace GitHubIssuesCli.Commands
     {
         private readonly IReporter _reporter;
         private readonly ListIssueCriteria _criteria = new ListIssueCriteria();
-        
+
+        [Option(CommandOptionType.NoValue)]
+        public bool All { get; set; } = false;
+
         [Option(CommandOptionType.SingleValue, Description = "The repository to limit the issues to", LongName = "repo")]
         [RegularExpression("^(?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)$", ErrorMessage = "The option {0} must be in the format owner/repo")]
         public string Repository { get; set; }
@@ -69,6 +72,13 @@ namespace GitHubIssuesCli.Commands
                     _criteria.Repository = repositoryInfo.Name;
                 }
             }
+            
+            // If user passes -all flag, but no repo was specified, then print a warning and ignore the flag
+            if (All && string.IsNullOrEmpty(_criteria.Owner) && string.IsNullOrEmpty(_criteria.Repository))
+            {
+                _reporter.Warn("The -all flag is only valid when a listing issues for a specific repository. Flag will be ignored.");
+                All = false;
+            }
 
             // Validate the user
             var currentUserInfo = await GitHubClient.User.Current();            
@@ -103,20 +113,20 @@ namespace GitHubIssuesCli.Commands
             {
                 issues = await GitHubClient.Issue.GetAllForRepository(_criteria.Owner, _criteria.Repository, new RepositoryIssueRequest
                 {
-                    Assignee = Relation == IssueRelation.Assigned ? _criteria.User : null,
-                    Creator = Relation == IssueRelation.Created ? _criteria.User : null,
-                    Mentioned = Relation == IssueRelation.Mentioned ? _criteria.User : null,
+                    Assignee = All ? null : Relation == IssueRelation.Assigned ? _criteria.User : null,
+                    Creator = All ? null : Relation == IssueRelation.Created ? _criteria.User : null,
+                    Mentioned = All ? null : Relation == IssueRelation.Mentioned ? _criteria.User : null,
                     State = State
                 });
             }
-            else if (_criteria.Owner!= null)
-            {
-                issues = await GitHubClient.Issue.GetAllForOrganization(_criteria.Owner, new IssueRequest
-                {
-                    Filter = GetIssueFilter(Relation),
-                    State = State
-                });
-            }
+//            else if (_criteria.Owner!= null)
+//            {
+//                issues = await GitHubClient.Issue.GetAllForOrganization(_criteria.Owner, new IssueRequest
+//                {
+//                    Filter = GetIssueFilter(Relation),
+//                    State = State
+//                });
+//            }
             else
             {
                 issues = await GitHubClient.Issue.GetAllForCurrent(new IssueRequest
@@ -127,24 +137,30 @@ namespace GitHubIssuesCli.Commands
             }
             
             console.Write("Listing ");
-            console.Write($"{State}", ConsoleColor.Blue);
-            console.Write(" issues ");
-            switch (Relation)
+            console.Write($"{State} ", ConsoleColor.Blue);
+            console.Write("issues ");
+            
+            if (!All)
             {
-                case IssueRelation.Assigned:
-                    console.Write("assigned to ");
-                    break;
-                case IssueRelation.Created:
-                    console.Write("created by ");
-                    break;
-                case IssueRelation.Mentioned:
-                    console.Write("mentioning ");
-                    break;
+                switch (Relation)
+                {
+                    case IssueRelation.Assigned:
+                        console.Write("assigned to ");
+                        break;
+                    case IssueRelation.Created:
+                        console.Write("created by ");
+                        break;
+                    case IssueRelation.Mentioned:
+                        console.Write("mentioning ");
+                        break;
+                }
+
+                console.Write($"@{_criteria.User} ", ConsoleColor.Blue);
             }
-            console.Write($"@{_criteria.User}", ConsoleColor.Blue);
+
             if (_criteria.Owner != null && _criteria.Repository != null)
             {
-                console.Write(" in ");
+                console.Write("in ");
                 console.Write($"{_criteria.Owner}/{_criteria.Repository}", ConsoleColor.DarkYellow);
             }            
             console.WriteLine();
