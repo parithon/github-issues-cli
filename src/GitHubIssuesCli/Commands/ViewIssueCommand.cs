@@ -17,10 +17,11 @@ namespace GitHubIssuesCli.Commands
         private readonly IBrowserService _browserService;
         private readonly IReporter _reporter;
 
-        [Option(CommandOptionType.NoValue, Description = "Opens the issue for viewing in the web browser")]
+        [Option(CommandOptionType.NoValue, Description = "Opens the issue for viewing in the web browser.")]
         public bool Browser { get; set; }
         
-        [Argument(0, Description = "The reference to the issue to open")]
+        [Argument(0, Description = "The reference to the issue to open. The issue can be specified in the format owner/repo#123. Alternatively, when running the command from a directory " +
+                                   "containing a Git repository with a GitHub remote, you can simply specify the issue number and the correspending issue in that GitHub remote will be viewed.")]
         [Required]
         [RegularExpression("^((?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)\\#)?(?<issue>\\d+)$", 
             ErrorMessage = "The {0} argument should be in the format owner/repo#number or you can simply pass the issue number when inside a directory containing a GitHub repository")]

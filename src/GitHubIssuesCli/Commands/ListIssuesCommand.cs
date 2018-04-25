@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GitHubIssuesCli.Services;
 using McMaster.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils.HelpText;
 using Octokit;
 
 namespace GitHubIssuesCli.Commands
@@ -17,20 +18,27 @@ namespace GitHubIssuesCli.Commands
         private readonly IReporter _reporter;
         private readonly ListIssueCriteria _criteria = new ListIssueCriteria();
 
-        [Option(CommandOptionType.NoValue)]
+        [Option(CommandOptionType.NoValue,
+            Description = "Display all issues (regardless of user) in the specified repository.")]
         public bool All { get; set; } = false;
 
-        [Option(CommandOptionType.SingleValue, Description = "The repository to limit the issues to", LongName = "repo")]
+        [Option(CommandOptionType.SingleValue, 
+            Description = "The repository to limit the issues to. When running the command from a directory containing a Git repository which has a GitHub remote, it will limit the issues to that GitHub repository.", 
+            LongName = "repo")]
         [RegularExpression("^(?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)$", ErrorMessage = "The option {0} must be in the format owner/repo")]
         public string Repository { get; set; }
-        
-        [Option(CommandOptionType.SingleValue, Description = "The user who the issues are related to")]
+
+        [Option(CommandOptionType.SingleValue, 
+            Description = "The user who the issues are related to. If no user is specified, the authenticated user will be used. The relationship of the user to the issues can be specified using the --rel option.")]
         public string User { get; set; }
 
-        [Option(CommandOptionType.SingleValue, Description = "The relation of the issues to the user", ShortName = "R", LongName = "rel")]
+        [Option(CommandOptionType.SingleValue, 
+            Description = "The relation of the issues to the user. (Assigned | Created | Mentioned)", 
+            ShortName = "R", LongName = "rel")]
         public IssueRelation Relation { get; set; } = IssueRelation.Assigned;
         
-        [Option(CommandOptionType.SingleValue, Description = "The state of the issues")]
+        [Option(CommandOptionType.SingleValue, 
+            Description = "The state of the issues. (Open | Closed | All)")]
         public ItemStateFilter State { get; set; } = ItemStateFilter.Open;
         
         public ListIssuesCommand(IGitHubClient gitHubClient, IGitHubRepositoryDiscoveryService gitHubRepositoryDiscoveryService, IReporter reporter) 
