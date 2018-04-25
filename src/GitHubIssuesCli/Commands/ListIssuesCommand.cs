@@ -39,7 +39,7 @@ namespace GitHubIssuesCli.Commands
         public async Task<int> OnExecuteAsync(IConsole console)
         {
             IReadOnlyList<Issue> issues = null;
-            
+
             // See if a repo was passed in
             if (!string.IsNullOrEmpty(Repository))
             {

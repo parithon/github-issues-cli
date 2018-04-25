@@ -4,8 +4,12 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="LibGit2Sharp" Version="0.26.0-preview-0017" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0-preview-20180109-01" />
     <PackageReference Include="Moq" Version="4.8.2" />
+    <PackageReference Include="Octokit" Version="0.29.0" />
+    <PackageReference Include="System.IO.Abstractions" Version="2.1.0.178" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
