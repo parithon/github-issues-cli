@@ -19,7 +19,7 @@ namespace GitHubIssuesCli.Tests.Commands
         private readonly Mock<IGitHubRepositoryDiscoveryService> _discoveryService;
         private readonly Mock<IBrowserService> _browserService;
         private readonly Mock<IReporter> _reporter;
-        private readonly Mock<IConsole> _console;
+        private readonly IConsole _console;
         private readonly Mock<IIssuesClient> _issuesClient;
         private readonly Mock<IRepositoriesClient> _repositoriesClient;
 
@@ -52,7 +52,7 @@ namespace GitHubIssuesCli.Tests.Commands
 
             _browserService = new Mock<IBrowserService>();
             _reporter = new Mock<IReporter>();
-            _console = new Mock<IConsole>();
+            _console = NullConsole.Singleton;
         }
         
         [Fact]
@@ -66,7 +66,7 @@ namespace GitHubIssuesCli.Tests.Commands
             command.Issue = $"{ValidIssueNumber}";
             
             // Act
-            await command.OnExecuteAsync(_console.Object);
+            await command.OnExecuteAsync(_console);
 
             // Assert
             _reporter.Verify(r => r.Error(It.IsAny<string>()), Times.Once());
@@ -80,7 +80,7 @@ namespace GitHubIssuesCli.Tests.Commands
             command.Issue = $"{ValidOwner}/{ValidRepo}#{ValidIssueNumber}";
             
             // Act
-            await command.OnExecuteAsync(_console.Object);
+            await command.OnExecuteAsync(_console);
 
             // Assert
             _issuesClient.Verify(client => client.Get(ValidOwner, ValidRepo, ValidIssueNumber), Times.Once());
@@ -95,7 +95,7 @@ namespace GitHubIssuesCli.Tests.Commands
             
             // Act
             command.Browser = true;
-            await command.OnExecuteAsync(_console.Object);
+            await command.OnExecuteAsync(_console);
             
             // Assert
             _issuesClient.Verify(client => client.Get(ValidOwner, ValidRepo, ValidIssueNumber), Times.Once());
@@ -110,7 +110,7 @@ namespace GitHubIssuesCli.Tests.Commands
             command.Issue = $"{ValidOwner}/{InvalidRepo}#{ValidIssueNumber}";
             
             // Act
-            await command.OnExecuteAsync(_console.Object);
+            await command.OnExecuteAsync(_console);
 
             // Assert
             _reporter.Verify(r => r.Error(It.IsAny<string>()), Times.Once());
@@ -125,7 +125,7 @@ namespace GitHubIssuesCli.Tests.Commands
             
             // Act
             command.Browser = true;
-            await command.OnExecuteAsync(_console.Object);
+            await command.OnExecuteAsync(_console);
             
             // Assert
             _browserService.Verify(service => service.OpenBrowser($"https://github.com/{ValidOwner}/{ValidRepo}/issues/{ValidIssueNumber}"), Times.Once);

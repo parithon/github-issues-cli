@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubIssuesCli", "src\GitH
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{47856254-4342-4B0B-BB15-42B0335FC41A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubIssuesCli.Tests", "src\GitHubIssuesCli.Tests\GitHubIssuesCli.Tests.csproj", "{C322E6E6-4537-4DDE-876F-74AA0A924ABF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubIssuesCli.Tests", "test\GitHubIssuesCli.Tests\GitHubIssuesCli.Tests.csproj", "{C322E6E6-4537-4DDE-876F-74AA0A924ABF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
