@@ -19,6 +19,7 @@ namespace GitHubIssuesCli
     //[Subcommand("auth", typeof(AuthCommand))]
     [Subcommand("list", typeof(ListIssuesCommand))]
     [Subcommand("view", typeof(ViewIssueCommand))]
+    [Subcommand("new", typeof(NewIssueCommand))]
     [VersionOptionFromMember(MemberName = nameof(GetVersion))]
     class Program: CommandBase
     {

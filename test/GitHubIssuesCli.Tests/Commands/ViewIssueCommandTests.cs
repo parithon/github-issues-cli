@@ -21,7 +21,6 @@ namespace GitHubIssuesCli.Tests.Commands
         private readonly Mock<IReporter> _reporter;
         private readonly IConsole _console;
         private readonly Mock<IIssuesClient> _issuesClient;
-        private readonly Mock<IRepositoriesClient> _repositoriesClient;
 
         private const string ValidOwner = "jerriep";
         private const string ValidRepo = "github-issues-cli";
@@ -30,10 +29,10 @@ namespace GitHubIssuesCli.Tests.Commands
         
         public ViewIssueCommandTests()
         {
-            _repositoriesClient = new Mock<IRepositoriesClient>();
-            _repositoriesClient.Setup(client => client.Get(ValidOwner, ValidRepo))
+            var repositoriesClient = new Mock<IRepositoriesClient>();
+            repositoriesClient.Setup(client => client.Get(ValidOwner, ValidRepo))
                 .Returns(Task.FromResult(GitHubModelFactory.CreateRepository(ValidOwner, ValidRepo)));
-            _repositoriesClient.Setup(client => client.Get(ValidOwner, InvalidRepo))
+            repositoriesClient.Setup(client => client.Get(ValidOwner, InvalidRepo))
                 .Throws(new NotFoundException("Say what!?", HttpStatusCode.NotFound));
 
             _issuesClient = new Mock<IIssuesClient>();
@@ -44,7 +43,7 @@ namespace GitHubIssuesCli.Tests.Commands
             _gitHubClient.Setup(client => client.Issue)
                 .Returns(_issuesClient.Object);
             _gitHubClient.Setup(client => client.Repository)
-                .Returns(_repositoriesClient.Object);
+                .Returns(repositoriesClient.Object);
             
             _discoveryService = new Mock<IGitHubRepositoryDiscoveryService>();
             _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
