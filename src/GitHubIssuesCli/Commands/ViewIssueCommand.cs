@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO.Abstractions;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -79,6 +80,62 @@ namespace GitHubIssuesCli.Commands
                 // Open the issue in the browser
                 if (Browser)
                     _browserService.OpenBrowser(issue.HtmlUrl);
+                else
+                {
+                    console.Write(issue.Title);
+                    console.Write($" ({repositoryInfo.Owner.Login}/{repositoryInfo.Name}#{issue.Number})", ConsoleColor.Yellow);
+                    console.WriteLine();
+                    console.WriteLine();
+
+                    console.WriteLine(issue.Body);
+                    console.WriteLine();
+
+                    if (issue.Labels != null && issue.Labels.Count > 0)
+                    {
+                        foreach (var issueLabel in issue.Labels)
+                        {
+                            var labelColors = ConsoleColorHelper.FromHex(issueLabel.Color);
+                            console.BackgroundColor = labelColors.BackgroundCololr;
+                            console.ForegroundColor = labelColors.ForegroundColor;
+                            console.Write($"{issueLabel.Name}");
+                            console.ResetColor();
+                
+                            console.Write(" ");    
+                        }
+                        console.WriteLine();
+                        console.WriteLine();
+                    }
+
+                    console.Write("Opened by: ");
+                    console.Write(issue.User.Login, ConsoleColor.Blue);
+                    console.WriteLine();
+
+                    console.Write("Status: ");
+                    console.Write($"{issue.State.Value}", ConsoleColor.Blue);
+                    if (issue.State.Value == ItemState.Closed && issue.ClosedAt.HasValue)
+                    {
+                        console.Write(" by ");
+                        console.Write(issue.ClosedBy.Login, ConsoleColor.Blue);
+                        console.Write(" on ");
+                        console.Write(issue.ClosedAt.Value.ToString("d"), ConsoleColor.Blue);
+                    }
+                    console.WriteLine();
+
+                    if (issue.State.Value == ItemState.Open)
+                    {
+                        console.Write("Assigned to: ");
+                        if (issue.Assignees == null || issue.Assignees.Count == 0)
+                        {
+                            console.Write("UNASSIGNED", ConsoleColor.Blue);
+                        }
+                        else
+                        {
+                            console.Write(string.Join(", ", issue.Assignees.Select(a => a.Login)), ConsoleColor.Blue);
+                        }                        
+                        console.WriteLine();
+                    }
+
+                }
                 
             }
             catch (NotFoundException)
