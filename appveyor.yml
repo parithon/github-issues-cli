@@ -19,3 +19,11 @@ artifacts:
   - path: 'artifacts\*.nupkg'
     name: Packages
     type: NuGetPackages
+deploy:
+  - provider: NuGet
+    name: myget
+    artifact: Packages
+    server: https://www.myget.org/F/github-issues-cli/api/v2/package
+    symbol_server: https://www.myget.org/F/github-issues-cli/api/v2/package
+    api_key:
+      secure: Nadp4it+3cE5F7eSCtkq6k222r0ykbt0ZeCBmbznUSmUqjFIDnyuUaVZUn66PV3A
