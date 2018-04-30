@@ -1,20 +1,34 @@
-﻿using System.IO.Abstractions;
-using System.Linq.Expressions;
+﻿using System;
 using System.Net;
 using System.Threading.Tasks;
 using GitHubIssuesCli.Commands;
+using GitHubIssuesCli.Exceptions;
 using GitHubIssuesCli.Services;
-using LibGit2Sharp;
 using McMaster.Extensions.CommandLineUtils;
 using Moq;
 using Octokit;
 using Xunit;
-using NotFoundException = Octokit.NotFoundException;
 
 namespace GitHubIssuesCli.Tests.Commands
 {
-    public class ViewIssueCommandTests
+    public class GitHubIssueCommandBaseTests
     {
+        /// <summary>
+        /// Simple tester class to exercise the <see cref="GitHubIssueCommandBase"/> class.
+        /// </summary>
+        private class GitHubIssueCommandBaseTester : GitHubIssueCommandBase
+        {
+            public GitHubIssueCommandBaseTester(IGitHubClient gitHubClient, IGitHubRepositoryDiscoveryService gitHubRepositoryDiscoveryService) 
+                : base(gitHubClient, gitHubRepositoryDiscoveryService)
+            {
+            }
+
+            public Task<(Issue, Repository)> GetIssueTesterAsync(string issueReference)
+            {
+                return GetIssueAsync(issueReference);
+            }
+        }
+        
         private readonly Mock<IGitHubClient> _gitHubClient;
         private readonly Mock<IGitHubRepositoryDiscoveryService> _discoveryService;
         private readonly Mock<IBrowserService> _browserService;
@@ -26,8 +40,8 @@ namespace GitHubIssuesCli.Tests.Commands
         private const string ValidRepo = "github-issues-cli";
         private const string InvalidRepo = "non-existent";
         private const int ValidIssueNumber = 100;
-        
-        public ViewIssueCommandTests()
+
+        public GitHubIssueCommandBaseTests()
         {
             var repositoriesClient = new Mock<IRepositoriesClient>();
             repositoriesClient.Setup(client => client.Get(ValidOwner, ValidRepo))
@@ -55,36 +69,58 @@ namespace GitHubIssuesCli.Tests.Commands
         }
         
         [Fact]
-        public async Task ValidationException_ReportsError()
+        public async Task NotInARepoFolder_ThrowsValidationException()
         {
             // Arrange
             _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
                 .Returns(() => null);
 
-            ViewIssueCommand command = new ViewIssueCommand(_gitHubClient.Object, _discoveryService.Object, _browserService.Object, _reporter.Object);
-            command.Issue = $"{ValidOwner}/{InvalidRepo}#{ValidIssueNumber}";
+            var command = new GitHubIssueCommandBaseTester(_gitHubClient.Object, _discoveryService.Object);
             
-            // Act
-            await command.OnExecuteAsync(_console);
-
             // Assert
-            _reporter.Verify(r => r.Error(It.IsAny<string>()), Times.Once());
+            await Assert.ThrowsAsync<CommandValidationException>(() => command.GetIssueTesterAsync($"{ValidIssueNumber}"));
         }
 
         [Fact]
-        public async Task PassingBrowserFlag_OpensBrowser()
+        public async Task NotInARepoFolder_RetrievesIssue_WhenFullIssueSpecified()
         {
             // Arrange
-            ViewIssueCommand command = new ViewIssueCommand(_gitHubClient.Object, _discoveryService.Object, _browserService.Object, _reporter.Object);
-            command.Issue = $"{ValidIssueNumber}";
+            _discoveryService.Setup(service => service.DiscoverInCurrentDirectory())
+                .Returns(() => null);
+
+            var command = new GitHubIssueCommandBaseTester(_gitHubClient.Object, _discoveryService.Object);
             
             // Act
-            command.Browser = true;
-            await command.OnExecuteAsync(_console);
+            await command.GetIssueTesterAsync($"{ValidOwner}/{ValidRepo}#{ValidIssueNumber}");
+
+            // Assert
+            _issuesClient.Verify(client => client.Get(ValidOwner, ValidRepo, ValidIssueNumber), Times.Once());
+        }
+        
+        [Fact]
+        public async Task InARepoFolder_RetrievesIssue_WhenIssueNumberSpecified()
+        {
+            // Arrange
+            var command = new GitHubIssueCommandBaseTester(_gitHubClient.Object, _discoveryService.Object);
+            
+            // Act
+            await command.GetIssueTesterAsync($"{ValidIssueNumber}");
             
             // Assert
-            _browserService.Verify(service => service.OpenBrowser($"https://github.com/{ValidOwner}/{ValidRepo}/issues/{ValidIssueNumber}"), Times.Once);
+            _issuesClient.Verify(client => client.Get(ValidOwner, ValidRepo, ValidIssueNumber), Times.Once());
         }
 
+
+        [Fact]
+        public async Task InvalidRepo_ReportsError()
+        {
+            // Arrange
+            var command = new GitHubIssueCommandBaseTester(_gitHubClient.Object, _discoveryService.Object);
+            
+            // Act
+
+            // Assert
+            await Assert.ThrowsAsync<CommandValidationException>(() => command.GetIssueTesterAsync($"{ValidOwner}/{InvalidRepo}#{ValidIssueNumber}"));
+        }
     }
 }
