@@ -6,7 +6,7 @@ namespace GitHubIssuesCli.Tests
 {
     public static class GitHubModelFactory
     {
-        public static Issue CreateIssue(string owner, string repo, int number)
+        public static Issue CreateIssue(string owner, string repo, int number, ItemState? itemState = ItemState.Open)
         {
             return new Issue(
                 $"https://api.github.com/repos/{owner}/{repo}/issues/{number}",
@@ -14,7 +14,7 @@ namespace GitHubIssuesCli.Tests
                 $"https://api.github.com/repos/{owner}/{repo}/issues/{number}/comments",
                 $"https://api.github.com/repos/{owner}/{repo}/issues/{number}/events",
                 number,
-                ItemState.Open,
+                itemState ?? ItemState.Open,
                 "Issue Title",
                 "Issue Body",
                 null,

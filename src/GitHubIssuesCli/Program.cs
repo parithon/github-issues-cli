@@ -20,6 +20,7 @@ namespace GitHubIssuesCli
     [Subcommand("list", typeof(ListIssuesCommand))]
     [Subcommand("view", typeof(ViewIssueCommand))]
     [Subcommand("new", typeof(NewIssueCommand))]
+    [Subcommand("close", typeof(CloseIssueCommand))]
     [VersionOptionFromMember(MemberName = nameof(GetVersion))]
     class Program: CommandBase
     {

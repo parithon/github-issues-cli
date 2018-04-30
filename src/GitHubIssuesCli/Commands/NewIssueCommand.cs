@@ -9,6 +9,7 @@ using Octokit;
 
 namespace GitHubIssuesCli.Commands
 {
+    [Command(Description = "Creates a new GitHub Issue", ThrowOnUnexpectedArgument = false)]
     public class NewIssueCommand : GitHubCommandBase
     {
         private readonly IReporter _reporter;

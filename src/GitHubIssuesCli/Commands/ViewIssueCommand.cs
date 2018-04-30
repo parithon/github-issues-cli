@@ -18,7 +18,7 @@ namespace GitHubIssuesCli.Commands
         [Option(CommandOptionType.NoValue, Description = "Opens the issue in the web browser.")]
         public bool Browser { get; set; }
         
-        [Argument(0, Description = "The reference to the issue to open, in the format owner/repo#123. " +
+        [Argument(0, Description = "The reference to the issue to view (in the format owner/repo#123). " +
                                    "When running command from a directory containing a repository, only the issue number can be used.")]
         [Required]
         [RegularExpression("^((?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)\\#)?(?<issue>\\d+)$", 
