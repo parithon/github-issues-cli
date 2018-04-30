@@ -21,6 +21,7 @@ namespace GitHubIssuesCli
     [Subcommand("view", typeof(ViewIssueCommand))]
     [Subcommand("new", typeof(NewIssueCommand))]
     [Subcommand("close", typeof(CloseIssueCommand))]
+    [Subcommand("open", typeof(OpenIssueCommand))]
     [VersionOptionFromMember(MemberName = nameof(GetVersion))]
     class Program: CommandBase
     {
