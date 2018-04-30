@@ -20,12 +20,13 @@ The latest release of github-issues-cli requires the [2.1.300-preview2](https://
 
 Once installed, run this command:
 
-```
+```bash
 dotnet tool install --global github-issues-cli
 ```
 
 ## Usage
 
+```text
 Usage: ghi [options] [command]
 
 Options:
@@ -38,6 +39,7 @@ Commands:
   new           Creates a new GitHub Issue
   open          Opens a GitHub Issue
   view          View details of specific GitHub Issue
+```
 
 ### General usage
 
