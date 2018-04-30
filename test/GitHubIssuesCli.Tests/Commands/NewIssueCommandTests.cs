@@ -155,5 +155,20 @@ namespace GitHubIssuesCli.Tests.Commands
                 It.Is<NewIssue>(issue => issue.Assignees.Contains(ValidUser1) && issue.Assignees.Contains(ValidUser2))));
         }
 
+        [Fact]
+        public async Task Labels_PassedToGitHub()
+        {
+            // Arrange
+            NewIssueCommand command = new NewIssueCommand(_gitHubClient.Object, _discoveryService.Object, _reporter.Object);
+            command.Title = NewIssueTitle;
+            command.Label = new List<string> { "label1", "label2" };
+            
+            // Act
+            await command.OnExecuteAsync(NullConsole.Singleton);
+
+            // Assert
+            _issuesClient.Verify(client => client.Create(ValidOwner, ValidRepo, 
+                It.Is<NewIssue>(issue => issue.Labels.Contains("label1") && issue.Labels.Contains("label2"))));
+        }
     }
 }

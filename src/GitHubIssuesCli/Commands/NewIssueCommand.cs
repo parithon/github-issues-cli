@@ -22,6 +22,9 @@ namespace GitHubIssuesCli.Commands
         
         [Option(CommandOptionType.SingleValue, Description = "Body of the issue")]
         public string Body { get; set; }
+
+        [Option(CommandOptionType.MultipleValue, Description = "Label(s) to assign to the issue.")]
+        public List<string> Label { get; set; }
         
         [Required]
         [Argument(0, "Title of the issue")]
@@ -102,6 +105,9 @@ namespace GitHubIssuesCli.Commands
                     }
                 }
             };
+
+            // Assign the labels
+            Label?.ForEach(l => newIssue.Labels.Add(l));
 
             // Make call to GH to create issue
             var issue = await GitHubClient.Issue.Create(repositoryInfo.Owner.Login, repositoryInfo.Name, newIssue);
