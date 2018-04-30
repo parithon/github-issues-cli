@@ -1,11 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
-using System.IO.Abstractions;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GitHubIssuesCli.Exceptions;
 using GitHubIssuesCli.Services;
 using McMaster.Extensions.CommandLineUtils;
 using Octokit;
@@ -13,7 +10,7 @@ using Octokit;
 namespace GitHubIssuesCli.Commands
 {
     [Command(Description = "View details of specific GitHub Issue", ThrowOnUnexpectedArgument = false)]
-    public class ViewIssueCommand : GitHubCommandBase
+    public class ViewIssueCommand : GitHubIssueCommandBase
     {
         private readonly IBrowserService _browserService;
         private readonly IReporter _reporter;
@@ -38,45 +35,10 @@ namespace GitHubIssuesCli.Commands
 
         public async Task<int> OnExecuteAsync(IConsole console)
         {
-            Repository repositoryInfo = null;
-
-            // Check to see whether the Issue argument contains thte owner and the repo
-            var match = Regex.Match(Issue, "^((?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)\\#)?(?<issue>\\d+)$");
-            if (match.Groups["owner"].Success && match.Groups["repo"].Success)
-            {
-                string owner = match.Groups["owner"].Value;
-                string repo = match.Groups["repo"].Value;
-
-                try
-                {
-                    repositoryInfo = await GitHubClient.Repository.Get(owner, repo);
-                }
-                catch (NotFoundException)
-                {
-                    _reporter.Error($"'{owner}/{repo}' is not a valid GitHub repository");
-                    return 1;
-                }
-            }
-            else
-            {
-                repositoryInfo = await GetGitHubRepositoryFromFolder();
-            }
-
-            // If we are unable to determine the repo, then return an error
-            if (repositoryInfo == null)
-            {
-                _reporter.Error("No repository specified. You need to either specify the issue number in the format owner/repo#number, or alternatively you need to run the command from a directory containing a GitHub repository");
-                
-                return 1;
-            }
-            
-            // Get the issue from the repo
-            int issueNumber = Convert.ToInt32(match.Groups["issue"].Value);
             try
             {
-                // Get the actual issue
-                var issue = await GitHubClient.Issue.Get(repositoryInfo.Owner.Login, repositoryInfo.Name, issueNumber);
-                
+                var (issue, repositoryInfo) = await GetIssueAsync(Issue);
+
                 // Open the issue in the browser
                 if (Browser)
                     _browserService.OpenBrowser(issue.HtmlUrl);
@@ -134,13 +96,12 @@ namespace GitHubIssuesCli.Commands
                         }                        
                         console.WriteLine();
                     }
-
                 }
-                
             }
-            catch (NotFoundException)
+            catch (CommandValidationException ex)
             {
-                _reporter.Error($"Issue #{issueNumber} not found in repository {repositoryInfo.Owner.Login}/{repositoryInfo.Name}");
+                _reporter.Error(ex.Message);
+                
                 return 1;
             }
 
