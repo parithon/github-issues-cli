@@ -21,7 +21,7 @@ namespace GitHubIssuesCli.Commands
         public string Title { get; set; }
         
         [Option(CommandOptionType.SingleValue, 
-            Description = "The repository in which to create the new issue. If not specified and running the command from a directory containing a Git repository which has a GitHub remote, it will create the issue in that GitHub repository.", 
+            Description = "The repository in which to create the new issue. By default the repository in current folder will be used.", 
             LongName = "repo")]
         [RegularExpression("^(?<owner>[\\w-.]+)\\/(?<repo>[\\w-.]+)$", ErrorMessage = "The option {0} must be in the format owner/repo")]
         public string Repository { get; set; }
