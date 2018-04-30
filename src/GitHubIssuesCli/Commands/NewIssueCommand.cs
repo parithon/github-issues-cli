@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GitHubIssuesCli.Services;
@@ -14,6 +17,9 @@ namespace GitHubIssuesCli.Commands
     {
         private readonly IReporter _reporter;
 
+        [Option(CommandOptionType.MultipleValue, Description = "GitHub user(s) to assign to the issue.")]
+        public List<string> Assign { get; set; }
+        
         [Option(CommandOptionType.SingleValue, Description = "Body of the issue")]
         public string Body { get; set; }
         
@@ -62,7 +68,6 @@ namespace GitHubIssuesCli.Commands
                 repositoryInfo = await GetGitHubRepositoryFromFolder();
             }
 
-            
             // If we are unable to determine the repo, then return an error
             if (repositoryInfo == null)
             {
@@ -72,10 +77,34 @@ namespace GitHubIssuesCli.Commands
             }
             
             // Create the issue
-            var issue = await GitHubClient.Issue.Create(repositoryInfo.Owner.Login, repositoryInfo.Name, new NewIssue(Title)
+            var newIssue = new NewIssue(Title)
             {
                 Body = Body
-            });
+            };
+
+            // Set the assignees, if specified
+            if (Assign != null)
+            {
+                foreach (var a in Assign)
+                {
+                    // Validate each assignee
+                    try
+                    {
+                        await GitHubClient.User.Get(a);
+                
+                        newIssue.Assignees.Add(a);
+                    }
+                    catch (NotFoundException e)
+                    {
+                        _reporter.Error($"{a} is not a valid GitHub user");
+
+                        return ReturnCodes.Error;
+                    }
+                }
+            };
+
+            // Make call to GH to create issue
+            var issue = await GitHubClient.Issue.Create(repositoryInfo.Owner.Login, repositoryInfo.Name, newIssue);
 
             // Display the issue number
             console.Write("Created ");
