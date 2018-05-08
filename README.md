@@ -16,7 +16,7 @@ A simple command-line client for managing GitHub Issues.
 
 ## Installation
 
-The latest release of github-issues-cli requires the [2.1.300-preview2](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.300-preview2) .NET Core SDK or newer.
+The latest release of github-issues-cli requires the [.NET Core SDK 2.1.300-rc1](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.300-rc1) or newer.
 
 Once installed, run this command:
 
