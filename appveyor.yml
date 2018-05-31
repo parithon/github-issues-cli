@@ -26,4 +26,4 @@ deploy:
     server: https://www.myget.org/F/jerriep/api/v2/package
     symbol_server: https://www.myget.org/F/jerriep/api/v2/package
     api_key:
-      secure: Nadp4it+3cE5F7eSCtkq6k222r0ykbt0ZeCBmbznUSmUqjFIDnyuUaVZUn66PV3A
+      secure: fD3Ct3DYJC7z1MGJvgvslATD9ZfF44PwTwOIaNWqPUU/hx4vjV6SL2XuFR39AKJn
