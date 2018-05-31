@@ -8,17 +8,15 @@
 
 [main-nuget]: https://www.nuget.org/packages/github-issues-cli/
 [main-nuget-badge]: https://img.shields.io/nuget/v/github-issues-cli.svg?style=flat-square&label=nuget
-[main-myget]: https://www.myget.org/feed/github-issues-cli/package/nuget/github-issues-cli
-[main-myget-badge]: https://img.shields.io/www.myget/github-issues-cli/vpre/github-issues-cli.svg?style=flat-square&label=myget
+[main-myget]: https://www.myget.org/feed/jerriep/package/nuget/github-issues-cli
+[main-myget-badge]: https://img.shields.io/www.myget/jerriep/vpre/github-issues-cli.svg?style=flat-square&label=myget
 
 
 A simple command-line client for managing GitHub Issues.
 
 ## Installation
 
-The latest release of github-issues-cli requires the [.NET Core SDK 2.1.300-rc1](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.300-rc1) or newer.
-
-Once installed, run this command:
+Download and install the [.NET Core 2.1 SDK](https://www.microsoft.com/net/download) or newer. Once installed, run the following command:
 
 ```bash
 dotnet tool install --global github-issues-cli
